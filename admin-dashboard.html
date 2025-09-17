@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | STS-IRS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #admin-map { height: 500px; }
+        .gradient-text {
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .sidebar {
+            transition: all 0.3s;
+        }
+        .sidebar.collapsed {
+            width: 5rem;
+        }
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        .sidebar.collapsed .sidebar-icon {
+            margin-right: 0;
+        }
+        .risk-high { background-color: #fef2f2; border-left: 4px solid #ef4444; }
+        .risk-medium { background-color: #fffbeb; border-left: 4px solid #f59e0b; }
+        .risk-low { background-color: #f0fdf4; border-left: 4px solid #10b981; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar bg-white w-64 shadow-md flex-shrink-0">
+            <div class="flex items-center justify-center h-16 px-4 border-b border-gray-200">
+                <i data-feather="shield" class="text-blue-600 h-8 w-8"></i>
+                <span class="ml-2 text-xl font-bold gradient-text sidebar-text">STS-IRS Admin</span>
+            </div>
+            <div class="px-4 py-4 border-b border-gray-200">
+                <div class="flex items-center">
+                    <img class="h-10 w-10 rounded-full" src="http://static.photos/people/200x200/42" alt="Admin profile">
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-900">Samuel Satwik</p>
+                        <p class="text-sm text-gray-500">Administrator</p>
+                    </div>
+                </div>
+            </div>
+            <nav class="mt-5 px-2 space-y-1">
+                <a href="#" class="bg-blue-50 text-blue-600 group flex items-center px-2 py-3 text-sm font-medium rounded-md">
+                    <i data-feather="home" class="text-blue-600 mr-3 flex-shrink-0 h-6 w-6 sidebar-icon"></i>
+                    <span class="sidebar-text">Dashboard</span>
+                </a>
+                <a href="admin-tourists.html" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-3 text-sm font-medium rounded-md">
+                    <i data-feather="users" class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6 sidebar-icon"></i>
+                    <span class="sidebar-text">Tourists</span>
+                </a>
+                <a href="admin-map.html" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-3 text-sm font-medium rounded-md">
+                    <i data-feather="map" class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6 sidebar-icon"></i>
+                    <span class="sidebar-text">Live Map</span>
+                </a>
+                <a href="admin-alerts.html" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-3 text-sm font-medium rounded-md">
+                    <i data-feather="bell" class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6 sidebar-icon"></i>
+                    <span class="sidebar-text">Alerts</span>
+                    <span class="ml-auto inline-block py-0.5 px-3 text-xs font-medium rounded-full bg-red-100 text-red-800">12</span>
+                </a>
+                <a href="admin-reports.html" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-3 text-sm font-medium rounded-md">
+                    <i data-feather="file-text" class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6 sidebar-icon"></i>
+                    <span class="sidebar-text">Reports</span>
+                </a>
+                <a href="admin-efir.html" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-3 text-sm font-medium rounded-md">
+                    <i data-feather="alert-octagon" class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6 sidebar-icon"></i>
+                    <span class="sidebar-text">e-FIR Management</span>
+                </a>
+                <a href="admin-settings.html" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-3 text-sm font-medium rounded-md">
+                    <i data-feather="settings" class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6 sidebar-icon"></i>
+                    <span class="sidebar-text">Settings</span>
+                </a>
+            </nav>
+            <div class="absolute bottom-0 w-full px-2 py-4">
+                <a href="admin-login.html" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full">
+                    <i data-feather="log-out" class="text-gray-400 group-hover:text-gray-500 mr-3 flex-shrink-0 h-6 w-6 sidebar-icon"></i>
+                    <span class="sidebar-text">Logout</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="flex-1 overflow-auto">
+            <!-- Top navigation -->
+            <div class="bg-white shadow-sm">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between h-16">
+                        <div class="flex items-center">
+                            <h1 class="text-lg font-medium text-gray-900">Admin Dashboard</h1>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
+                                <i data-feather="activity" class="w-4 h-4 inline mr-1"></i>
+                                System Online
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                Last updated: <span id="current-time">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main dashboard content -->
+            <div class="px-4 sm:px-6 lg:px-8 py-6">
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                    <div class="bg-white overflow-hidden shadow rounded-lg" data-aos="fade-up">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <i data-feather="users" class="h-6 w-6 text-gray-400"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Active Tourists</dt>
+                                        <dd class="text-3xl font-semibold text-gray-900">187</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow rounded-lg" data-aos="fade-up" data-aos-delay="100">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <i data-feather="bell" class="h-6 w-6 text-red-400"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Active Alerts</dt>
+                                        <dd class="text-3xl font-semibold text-gray-900">12</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow rounded-lg" data-aos="fade-up" data-aos-delay="200">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <i data-feather="alert-octagon" class="h-6 w-6 text-orange-400"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Pending e-FIRs</dt>
+                                        <dd class="text-3xl font-semibold text-gray-900">3</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow rounded-lg" data-aos="fade-up" data-aos-delay="300">
+                        <div class="p-5">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <i data-feather="trending-up" class="h-6 w-6 text-green-400"></i>
+                                </div>
+                                <div class="ml-5 w-0 flex-1">
+                                    <dl>
+                                        <dt class="text-sm font-medium text-gray-500 truncate">Avg Response Time</dt>
+                                        <dd class="text-3xl font-semibold text-gray-900">8.2m</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map Section -->
+                <div class="mb-8" data-aos="fade-up">
+                    <div class="bg-white shadow rounded-lg overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Live Tourist Monitoring</h3>
+                            <p class="mt-1 text-sm text-gray-500">Real-time location tracking of active tourists</p>
+                        </div>
+                        <div class="p-6">
+                            <div id="admin-map" class="rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Alerts -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white shadow rounded-lg overflow-hidden" data-aos="fade-up">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Recent Alerts</h3>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            <div class="p-6 risk-high">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="bg-red-100 p-2 rounded-full">
+                                            <i data-feather="alert-triangle" class="h-5 w-5 text-red-600"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <h4 class="text-sm font-medium text-gray-900">Panic Button Activated</h4>
+                                            <p class="text-sm text-gray-500">Tourist ID: TID-2023-1567</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm text-red-600">2 min ago</span>
+                                </div>
+                            </div>
+                            <div class="p-6 risk-medium">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="bg-orange-100 p-2 rounded-full">
+                                            <i data-feather="map-pin" class="h-5 w-5 text-orange-600"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <h4 class="text-sm font-medium text-gray-900">High-Risk Zone Entry</h4>
+                                            <p class="text-sm text-gray-500">Tourist ID: TID-2023-1892</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm text-orange-600">15 min ago</span>
+                                </div>
+                            </div>
+                            <div class="p-6 risk-low">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="bg-green-100 p-2 rounded-full">
+                                            <i data-feather="activity" class="h-5 w-5 text-green-600"></i>
+                                        </div>
+                                        <div class="ml-4">
+                                            <h4 class="text-sm font-medium text-gray-900">Anomaly Detected</h4>
+                                            <p class="text-sm text-gray-500">Tourist ID: TID-2023-2045</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm text-green-600">1 hour ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Status -->
+                    <div class="bg-white shadow rounded-lg overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">System Status</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-900">Blockchain Ledger</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Operational
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-900">AI Detection</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-900">Geo-fencing</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Monitoring
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-gray-900">SMS Gateway</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Test Mode
+                                </span>
+                            </div>
+                            <div class="pt-4">
+                                <button class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    Generate System Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Initialize admin map
+        document.addEventListener('DOMContentLoaded', function() {
+            const map = L.map('admin-map').setView([20.5937, 78.9629], 5);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Add sample tourist markers
+            const tourists = [
+                {id: "TID-2023-1567", coords: [28.6139, 77.2090], status: "active", risk: "low"},
+                {id: "TID-2023-1892", coords: [19.0760, 72.8777], status: "alert", risk: "high"},
+                {id: "TID-2023-2045", coords: [12.9716, 77.5946], status: "warning", risk: "medium"},
+                {id: "TID-2023-2189", coords: [26.9124, 75.7873], status: "active", risk: "low"},
+                {id: "TID-2023-2256", coords: [15.2993, 74.1240], status: "active", risk: "low"}
+            ];
+
+            tourists.forEach(tourist => {
+                let color, icon;
+                if (tourist.risk === "high") {
+                    color = "#ef4444";
+                    icon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>`,
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    });
+                } else if (tourist.risk === "medium") {
+                    color = "#f59e0b";
+                    icon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color: ${color}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.3);"></div>`,
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8]
+                    });
+                } else {
+                    color = "#10b981";
+                    icon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.3);"></div>`,
+                        iconSize: [12, 12],
+                        iconAnchor: [6, 6]
+                    });
+                }
+                
+                L.marker(tourist.coords, {icon: icon}).addTo(map)
+                    .bindPopup(`<b>${tourist.id}</b><br>Status: ${tourist.status}<br>Risk: ${tourist.risk}`);
+            });
+
+            // Add high-risk zones
+            const highRiskZone = L.polygon([
+                [[19.0760, 72.8777], [19.1760, 72.9777], [19.0760, 73.0777], [18.9760, 72.9777]]
+            ], {
+                color: '#ef4444',
+                fillColor: '#ef4444',
+                fillOpacity: 0.2,
+                weight: 2,
+                dashArray: '5, 5'
+            }).addTo(map).bindPopup("<b>High Risk Zone - Mumbai</b><br>Increased theft incidents");
+
+            const mediumRiskZone = L.polygon([
+                [[28.7139, 77.3090], [28.8139, 77.4090], [28.7139, 77.5090], [28.6139, 77.4090]]
+            ], {
+                color: '#f59e0b',
+                fillColor: '#f59e0b',
+                fillOpacity: 0.2,
+                weight: 2,
+                dashArray: '5, 5'
+            }).addTo(map).bindPopup("<b>Medium Risk Zone - Delhi</b><br>Exercise caution");
+        });
+
+        feather.replace();
+    </script>
+</body>
+</html>

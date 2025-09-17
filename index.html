@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STS-IRS | Smart Tourist Safety Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map { height: 500px; }
+        .safety-score {
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .blockchain-bg {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i data-feather="shield" class="text-blue-600 h-8 w-8"></i>
+                        <span class="ml-2 text-xl font-bold gradient-text">STS-IRS</span>
+                    </div>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                    <a href="#" class="border-blue-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Home</a>
+                    <a href="#features" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Features</a>
+                    <a href="#about" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">About</a>
+                    <a href="#contact" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Contact</a>
+                </div>
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <a href="tourist-login.html" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Tourist Portal</a>
+                    <a href="admin-login.html" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Admin Login</a>
+                </div>
+                <div class="-mr-2 flex items-center sm:hidden">
+                    <button type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-controls="mobile-menu" aria-expanded="false">
+                        <span class="sr-only">Open main menu</span>
+                        <i data-feather="menu"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu, show/hide based on menu state. -->
+        <div class="sm:hidden hidden" id="mobile-menu">
+            <div class="pt-2 pb-3 space-y-1">
+                <a href="#" class="bg-blue-50 border-blue-500 text-blue-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Home</a>
+                <a href="#features" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Features</a>
+                <a href="#about" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">About</a>
+                <a href="#contact" class="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium">Contact</a>
+                <div class="mt-4 px-4">
+                    <a href="tourist-login.html" class="w-full flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Tourist Portal</a>
+                    <a href="admin-login.html" class="w-full mt-2 flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Admin Login</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="relative bg-white overflow-hidden">
+        <div class="max-w-7xl mx-auto">
+            <div class="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+                <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+                    <div class="sm:text-center lg:text-left">
+                        <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+                            <span class="block">Safer journeys.</span>
+                            <span class="block text-blue-600">Faster response.</span>
+                        </h1>
+                        <p class="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                            Blockchain IDs, geo-fencing, AI anomaly detection, and rapid incident response for tourist safety.
+                        </p>
+                        <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                            <div class="rounded-md shadow">
+                                <a href="tourist-signup.html" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10">
+                                    Get Your Digital ID
+                                </a>
+                            </div>
+                            <div class="mt-3 sm:mt-0 sm:ml-3">
+                                <a href="#features" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 md:py-4 md:text-lg md:px-10">
+                                    Learn more
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+        <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
+            <img class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full" src="http://static.photos/travel/1200x630/42" alt="Tourist safety">
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div id="features" class="py-12 bg-gray-50" data-aos="fade-up">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center">
+                <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">Features</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Comprehensive tourist safety solution
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                    Combining cutting-edge technology with practical safety measures
+                </p>
+            </div>
+
+            <div class="mt-10">
+                <div class="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+                    <div class="relative" data-aos="fade-up" data-aos-delay="100">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                            <i data-feather="shield"></i>
+                        </div>
+                        <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Digital Tourist ID</p>
+                        <p class="mt-2 ml-16 text-base text-gray-500">
+                            Blockchain-based temporary identification with tamper-proof credentials and automatic expiration.
+                        </p>
+                    </div>
+
+                    <div class="relative" data-aos="fade-up" data-aos-delay="200">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                            <i data-feather="map"></i>
+                        </div>
+                        <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Geo-fencing Alerts</p>
+                        <p class="mt-2 ml-16 text-base text-gray-500">
+                            Real-time notifications when tourists enter high-risk zones with automated safety recommendations.
+                        </p>
+                    </div>
+
+                    <div class="relative" data-aos="fade-up" data-aos-delay="300">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                            <i data-feather="alert-triangle"></i>
+                        </div>
+                        <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Panic Button</p>
+                        <p class="mt-2 ml-16 text-base text-gray-500">
+                            Instant emergency alert with live location sharing to authorities and emergency contacts.
+                        </p>
+                    </div>
+
+                    <div class="relative" data-aos="fade-up" data-aos-delay="400">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                            <i data-feather="activity"></i>
+                        </div>
+                        <p class="ml-16 text-lg leading-6 font-medium text-gray-900">AI Anomaly Detection</p>
+                        <p class="mt-2 ml-16 text-base text-gray-500">
+                            Machine learning algorithms detect unusual patterns in movement and behavior for proactive alerts.
+                        </p>
+                    </div>
+
+                    <div class="relative" data-aos="fade-up" data-aos-delay="500">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                            <i data-feather="bar-chart-2"></i>
+                        </div>
+                        <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Safety Score</p>
+                        <p class="mt-2 ml-16 text-base text-gray-500">
+                            Dynamic risk assessment based on location, time, and historical data to guide safer travel.
+                        </p>
+                    </div>
+
+                    <div class="relative" data-aos="fade-up" data-aos-delay="600">
+                        <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
+                            <i data-feather="globe"></i>
+                        </div>
+                        <p class="ml-16 text-lg leading-6 font-medium text-gray-900">Multilingual Support</p>
+                        <p class="mt-2 ml-16 text-base text-gray-500">
+                            Available in multiple languages with seamless switching for international tourists.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Preview Section -->
+    <div class="bg-white py-12" data-aos="fade-up">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center mb-8">
+                <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">Interactive Safety Map</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Real-time location monitoring
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                    Visualize safe zones, high-risk areas, and tourist locations
+                </p>
+            </div>
+            <div class="rounded-xl overflow-hidden shadow-xl">
+                <div id="map"></div>
+            </div>
+            <div class="mt-6 flex justify-center">
+                <a href="tourist-signup.html" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Get access to full map features
+                    <i data-feather="arrow-right" class="ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blockchain ID Section -->
+    <div class="py-12 bg-blue-50 blockchain-bg" data-aos="fade-up">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center mb-12">
+                <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">Security</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Blockchain-powered Digital IDs
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                    Tamper-proof credentials with automatic expiration for privacy
+                </p>
+            </div>
+            <div class="mt-10">
+                <div class="relative bg-white shadow-xl rounded-2xl overflow-hidden">
+                    <div class="absolute inset-0 bg-blue-600 opacity-5"></div>
+                    <div class="relative px-6 py-12 sm:p-12">
+                        <div class="grid grid-cols-1 gap-8 sm:grid-cols-3">
+                            <div class="flex flex-col items-center text-center" data-aos="fade-up" data-aos-delay="100">
+                                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 text-blue-600">
+                                    <i data-feather="user"></i>
+                                </div>
+                                <h3 class="mt-6 text-lg font-medium text-gray-900">Secure Registration</h3>
+                                <p class="mt-2 text-base text-gray-500">
+                                    Verified KYC process with optional Aadhaar/Passport integration
+                                </p>
+                            </div>
+                            <div class="flex flex-col items-center text-center" data-aos="fade-up" data-aos-delay="200">
+                                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 text-blue-600">
+                                    <i data-feather="lock"></i>
+                                </div>
+                                <h3 class="mt-6 text-lg font-medium text-gray-900">Blockchain Anchored</h3>
+                                <p class="mt-2 text-base text-gray-500">
+                                    Immutable record on simulated ledger with cryptographic proof
+                                </p>
+                            </div>
+                            <div class="flex flex-col items-center text-center" data-aos="fade-up" data-aos-delay="300">
+                                <div class="flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 text-blue-600">
+                                    <i data-feather="clock"></i>
+                                </div>
+                                <h3 class="mt-6 text-lg font-medium text-gray-900">Auto-Expiration</h3>
+                                <p class="mt-2 text-base text-gray-500">
+                                    Temporary credentials that automatically expire after your trip
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-12 bg-gray-50 rounded-lg p-6" data-aos="fade-up" data-aos-delay="400">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                                    <i data-feather="hash" class="h-6 w-6 text-white"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-medium text-gray-900">Sample Blockchain Receipt</h3>
+                                    <div class="mt-2 text-sm text-gray-500 font-mono overflow-x-auto">
+                                        <p>Block #4271 | Hash: 0x4a7b1...e9f2c</p>
+                                        <p>Tourist ID: TID-2023-4271-5A9B</p>
+                                        <p>Timestamp: 2023-11-15T14:32:18Z</p>
+                                        <p>Expires: 2023-12-15T23:59:59Z</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <div id="about" class="py-12 bg-white" data-aos="fade-up">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center mb-12">
+                <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">About</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Smart India Hackathon Project
+                </p>
+            </div>
+            <div class="mt-10 mx-auto prose prose-blue prose-lg text-gray-500">
+                <p>
+                    This project — Smart Tourist Safety Monitoring & Incident Response — is an entry for the Smart India Hackathon (SIH). 
+                    It demonstrates blockchain-based temporary tourist IDs, AI anomaly detection, geo-fencing alerts, and rapid incident 
+                    response for safer tourism. Team: [Your Team Name]. Mentor: Samuel Satwik.
+                </p>
+                <p class="mt-4">
+                    The STS-IRS system addresses the critical need for tourist safety in India's growing tourism sector. 
+                    By combining cutting-edge technologies with practical safety measures, we aim to reduce response times 
+                    during emergencies and provide tourists with peace of mind during their travels.
+                </p>
+                <h3 class="mt-8 text-gray-900">Project Lead</h3>
+                <div class="mt-4 flex items-center">
+                    <div class="flex-shrink-0">
+                        <img class="h-16 w-16 rounded-full" src="http://static.photos/people/200x200/42" alt="Samuel Satwik">
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="text-lg font-medium text-gray-900">Samuel Satwik</h4>
+                        <p class="text-gray-500">Admin & Project Lead</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Section -->
+    <div id="contact" class="py-12 bg-gray-50" data-aos="fade-up">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center mb-12">
+                <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">Contact</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                    Get in touch with our team
+                </p>
+            </div>
+            <div class="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                                <i data-feather="mail" class="h-6 w-6 text-white"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium text-gray-900">Email</h3>
+                                <p class="mt-1 text-sm text-gray-500">contact@sts-irs.gov.in</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                                <i data-feather="phone" class="h-6 w-6 text-white"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium text-gray-900">Phone</h3>
+                                <p class="mt-1 text-sm text-gray-500">+91 1800 123 4567</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                                <i data-feather="map-pin" class="h-6 w-6 text-white"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-medium text-gray-900">Office</h3>
+                                <p class="mt-1 text-sm text-gray-500">Ministry of Tourism, New Delhi</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white">
+        <div class="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
+            <nav class="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
+                <div class="px-5 py-2">
+                    <a href="#" class="text-base text-gray-500 hover:text-gray-900">Home</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="#features" class="text-base text-gray-500 hover:text-gray-900">Features</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="#about" class="text-base text-gray-500 hover:text-gray-900">About</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="#contact" class="text-base text-gray-500 hover:text-gray-900">Contact</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="tourist-login.html" class="text-base text-gray-500 hover:text-gray-900">Tourist Portal</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="admin-login.html" class="text-base text-gray-500 hover:text-gray-900">Admin Login</a>
+                </div>
+            </nav>
+            <div class="mt-8 flex justify-center space-x-6">
+                <a href="#" class="text-gray-400 hover:text-gray-500">
+                    <span class="sr-only">Facebook</span>
+                    <i data-feather="facebook"></i>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-gray-500">
+                    <span class="sr-only">Twitter</span>
+                    <i data-feather="twitter"></i>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-gray-500">
+                    <span class="sr-only">Instagram</span>
+                    <i data-feather="instagram"></i>
+                </a>
+                <a href="#" class="text-gray-400 hover:text-gray-500">
+                    <span class="sr-only">LinkedIn</span>
+                    <i data-feather="linkedin"></i>
+                </a>
+            </div>
+            <p class="mt-8 text-center text-base text-gray-400">
+                &copy; 2023 Smart Tourist Safety Monitoring & Incident Response System. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+
+        // Initialize mobile menu toggle
+        document.querySelector('[aria-controls="mobile-menu"]').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Initialize map
+        document.addEventListener('DOMContentLoaded', function() {
+            const map = L.map('map').setView([20.5937, 78.9629], 5);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Add sample markers for demonstration
+            const cities = [
+                {name: "New Delhi", coords: [28.6139, 77.2090], risk: "medium"},
+                {name: "Mumbai", coords: [19.0760, 72.8777], risk: "high"},
+                {name: "Bangalore", coords: [12.9716, 77.5946], risk: "low"},
+                {name: "Jaipur", coords: [26.9124, 75.7873], risk: "medium"},
+                {name: "Goa", coords: [15.2993, 74.1240], risk: "low"}
+            ];
+
+            cities.forEach(city => {
+                let color;
+                if (city.risk === "high") color = "#ef4444";
+                else if (city.risk === "medium") color = "#f59e0b";
+                else color = "#10b981";
+                
+                L.circleMarker(city.coords, {
+                    radius: 8,
+                    fillColor: color,
+                    color: "#fff",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map).bindPopup(`<b>${city.name}</b><br>Risk level: ${city.risk}`);
+            });
+
+            // Add a sample high-risk zone (geo-fence)
+            const highRiskZone = L.polygon([
+                [[19.0760, 72.8777], [19.1760, 72.9777], [19.0760, 73.0777], [18.9760, 72.9777]]
+            ], {
+                color: '#ef4444',
+                fillColor: '#ef4444',
+                fillOpacity: 0.2,
+                weight: 2,
+                dashArray: '5, 5'
+            }).addTo(map).bindPopup("<b>High Risk Zone</b><br>Increased theft incidents reported");
+
+            // Add a sample medium-risk zone
+            const mediumRiskZone = L.polygon([
+                [[28.7139, 77.3090], [28.8139, 77.4090], [28.7139, 77.5090], [28.6139, 77.4090]]
+            ], {
+                color: '#f59e0b',
+                fillColor: '#f59e0b',
+                fillOpacity: 0.2,
+                weight: 2,
+                dashArray: '5, 5'
+            }).addTo(map).bindPopup("<b>Medium Risk Zone</b><br>Exercise caution at night");
+        });
+
+        feather.replace();
+    </script>
+</body>
+</html>
